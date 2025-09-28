@@ -1,0 +1,44 @@
+name: Build and Push Docker Image
+on:
+  workflow_dispatch:
+    inputs:
+      registry:
+        required: true
+        type: string
+        default: "ghcr.io"
+        description: "Registry to push the image to"
+      image_name:
+        required: true
+        type: string
+        default: "fhenixprotocol/images/ubuntu-24-04"
+        description: "Image name"
+      platforms:
+        required: false
+        type: string
+        default: '["linux/amd64", "linux/arm64"]'
+        description: "Platforms to build the image for"
+      dockerfile:
+        required: false
+        type: string
+        default: "ubuntu-24-04.Dockerfile"
+        description: "Dockerfile to build the image from"
+  release:
+    types: [created]
+  pull_request:
+    paths:
+      - '.github/workflows/build-image.yml'
+jobs:
+  build-and-push:
+    permissions:
+      contents: read
+      packages: write
+    uses: FhenixProtocol/actions/.github/workflows/docker_build.yml@v1.0.3
+    with:
+      registry: ${{ inputs.registry || 'ghcr.io' }}
+      image_name: ${{ inputs.image_name || 'fhenixprotocol/images/ubuntu-24-04' }}
+      platforms: ${{ inputs.platforms || '["linux/amd64", "linux/arm64"]' }}
+      dockerfile: ${{ inputs.dockerfile || 'ubuntu-24-04.Dockerfile' }}
+    secrets:
+      service_account_key: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+      docker_registry_token: ${{ secrets.GH_PAT_LIOR }}
+      git_submodule_token: ${{ secrets.GH_PAT_LIOR }}
